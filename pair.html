@@ -6,31 +6,53 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     /* your styles (as before) */
+    .input-container {
+  display: flex;
+  max-width: 300px;
+  width: 100%;
+  margin: 10px auto;
+  gap: 5px;
+}
+.input-container input {
+  flex: 1;
+  padding: 0.5rem;
+  font-size: 16px;
+}
+.input-container button {
+  padding: 0.5rem 1rem;
+  font-size: 16px;
+  cursor: pointer;
+}
+
   </style>
 </head>
 <body>
-  <div>
-    <h3>Enter WhatsApp Number with Country Code</h3>
-    <input type="text" id="number" placeholder="e.g. 255698101xxx">
-    <button id="submit">Submit</button>
-    <div id="output"></div>
-  </div>
+  <div class="input-container">
+  <input id="number" placeholder="255698101xxx" />
+  <button id="submit">Submit</button>
+</div>
+<div id="output"></div>
 
-  <script>
-    document.getElementById('submit').addEventListener('click', async () => {
-      const number = document.getElementById('number').value.trim();
-      if (!number) {
-        alert('Enter number first.');
-        return;
-      }
-      const res = await fetch(`/pair?number=${encodeURIComponent(number)}`);
-      const data = await res.json();
-      if (data.code) {
-        document.getElementById('output').innerHTML = `Pair Code: <strong>${data.code}</strong>`;
-      } else {
-        document.getElementById('output').innerText = data.error || 'Error getting code.';
-      }
-    });
-  </script>
+<script>
+document.getElementById('submit').addEventListener('click', async () => {
+  const number = document.getElementById('number').value.trim();
+  if(!number) {
+    alert('Enter number');
+    return;
+  }
+  try {
+    const res = await fetch(`/paircode?number=${encodeURIComponent(number)}`);
+    const data = await res.json();
+    if(data.code) {
+      document.getElementById('output').innerHTML = `<strong>PAIR CODE: ${data.code}</strong>`;
+    } else {
+      document.getElementById('output').innerText = data.error || 'Error getting code';
+    }
+  } catch(e) {
+    document.getElementById('output').innerText = 'Error: ' + e.message;
+  }
+});
+</script>
+
 </body>
 </html>
