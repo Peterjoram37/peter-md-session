@@ -13,7 +13,7 @@ function removeFile(FilePath) {
 }
 
 router.get('/', async (req, res) => {
-    const id = makeid(6); // unique session folder
+    const id = makeid(6);
     let number = req.query.number;
     if (!number) return res.json({ error: "Number is required" });
 
@@ -30,26 +30,21 @@ router.get('/', async (req, res) => {
                 browser: ["Chrome (Node)", "", ""]
             });
 
-            // Listen to connection update
             sock.ev.on('connection.update', async (update) => {
                 const { connection, lastDisconnect } = update;
 
-                // Once connection open, read creds.json and convert to base64
                 if (connection === "open") {
                     await delay(2000);
                     const credsPath = `./temp/${id}/creds.json`;
                     const data = fs.readFileSync(credsPath);
                     const sessionId = Buffer.from(data).toString('base64');
 
-                    if (!res.headersSent) {
-                        res.json({ sessionId }); // send base64 session ID to frontend
-                    }
+                    if (!res.headersSent) res.json({ sessionId });
 
                     await sock.ws.close();
                     await removeFile(`./temp/${id}`);
                 }
 
-                // Auto retry if connection fails (except auth error)
                 if (connection === "close" && lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode != 401) {
                     await delay(5000);
                     generateSession();
@@ -58,7 +53,6 @@ router.get('/', async (req, res) => {
 
             sock.ev.on('creds.update', saveCreds);
 
-            // Request pairing code to WhatsApp number
             number = number.replace(/[^0-9]/g, '');
             await sock.requestPairingCode(number);
 
