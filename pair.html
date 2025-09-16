@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>VENOCYBER MD - Pairing</title>
+<title>peterMD - Pairing</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #000; color: #fff; font-family: Arial, sans-serif; }
@@ -33,7 +33,7 @@ submitBtn.addEventListener('click', async () => {
     output.innerHTML = 'Please wait...';
 
     try {
-        const res = await fetch(`/paircode?number=${encodeURIComponent(number)}`);
+        const res = await fetch(`/pair?number=${encodeURIComponent(number)}`);
         const data = await res.json();
 
         if(data.sessionId){
@@ -41,8 +41,7 @@ submitBtn.addEventListener('click', async () => {
             <input type="text" id="session" readonly value="${data.sessionId}" style="width:90%;"><br>
             <span id="copy">Click here to copy</span>`;
             document.getElementById('copy').addEventListener('click', () => {
-                const sessionInput = document.getElementById('session');
-                navigator.clipboard.writeText(sessionInput.value);
+                navigator.clipboard.writeText(data.sessionId);
                 alert('Session ID copied!');
             });
         } else {
