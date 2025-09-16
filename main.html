@@ -1,35 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>PETER MD SESSION</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    /* same styles like before, adjust colors or labels if you want */
-    body { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; margin:0; background-color: blue; }
-    .btn { /* same stylings as your old .btn */ }
-  </style>
+<meta charset="UTF-8">
+<title>VENOCYBER MD</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background: blue; color: #fff; font-family: Arial, sans-serif; }
+.btn { width: 200px; padding: 0.8em 1.75em; margin-bottom: 12px; cursor: pointer; border-radius: 6px; border: none; font-size: 16px; background: red; color: #fff; }
+</style>
 </head>
 <body>
-  <h2 style="color:white;">Welcome to PETER MD SESSION</h2>
-  <button onclick="window.open(`/qr`)" class="btn">Get QR Code</button>
-  <button onclick="window.open(`/pair`)" class="btn">Generate Pair Code</button>
-  <button onclick="getSession()" class="btn">Get Session ID</button>
-
-  <script>
-    async function getSession() {
-      try {
-        const res = await fetch('/session/session');
-        const data = await res.json();
-        if (data.ok) {
-          prompt("Copy this sessionId:", data.sessionId);
-        } else {
-          alert(data.message || "Session not found.");
-        }
-      } catch (e) {
-        alert("Error: " + e.message);
-      }
-    }
-  </script>
+<h2>VENOCYBER MD</h2>
+<button onclick="window.open(`/pair`)" class="btn">Pair Code</button>
+<button onclick="window.open(`https://github.com/Peterjoram37/peter-md-session`)" class="btn">Bot Repo</button>
 </body>
 </html>
