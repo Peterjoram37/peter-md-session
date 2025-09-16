@@ -1,58 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Pair Code - PETER MD SESSION</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    /* your styles (as before) */
-    .input-container {
-  display: flex;
-  max-width: 300px;
-  width: 100%;
-  margin: 10px auto;
-  gap: 5px;
-}
-.input-container input {
-  flex: 1;
-  padding: 0.5rem;
-  font-size: 16px;
-}
-.input-container button {
-  padding: 0.5rem 1rem;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-  </style>
+<meta charset="UTF-8">
+<title>VENOCYBER MD - Pairing</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #000; color: #fff; font-family: Arial, sans-serif; }
+.input-container { display: flex; max-width: 300px; width: 90%; margin: 10px auto; gap: 5px; }
+.input-container input { flex: 1; padding: 0.5rem; font-size: 16px; border-radius: 5px; border: none; }
+.input-container button { padding: 0.5rem 1rem; font-size: 16px; cursor: pointer; border-radius: 5px; border: none; background: #5935ac; color: #fff; }
+.input-container button:hover { background: #8b17b6; }
+#output { margin-top: 20px; word-break: break-all; text-align: center; }
+#copy { cursor: pointer; color: #22c55e; }
+</style>
 </head>
 <body>
-  <div class="input-container">
-  <input id="number" placeholder="255698101xxx" />
-  <button id="submit">Submit</button>
+<h2>peterMD - Get Session ID</h2>
+<div class="input-container">
+<input id="number" type="text" placeholder="255698101xxx">
+<button id="submit">Get Session</button>
 </div>
 <div id="output"></div>
 
 <script>
-document.getElementById('submit').addEventListener('click', async () => {
-  const number = document.getElementById('number').value.trim();
-  if(!number) {
-    alert('Enter number');
-    return;
-  }
-  try {
-    const res = await fetch(`/paircode?number=${encodeURIComponent(number)}`);
-    const data = await res.json();
-    if(data.code) {
-      document.getElementById('output').innerHTML = `<strong>PAIR CODE: ${data.code}</strong>`;
-    } else {
-      document.getElementById('output').innerText = data.error || 'Error getting code';
+const submitBtn = document.getElementById('submit');
+const numberInput = document.getElementById('number');
+const output = document.getElementById('output');
+
+submitBtn.addEventListener('click', async () => {
+    const number = numberInput.value.trim();
+    if(!number) { alert('Enter WhatsApp number with country code'); return; }
+    output.innerHTML = 'Please wait...';
+
+    try {
+        const res = await fetch(`/pair?number=${encodeURIComponent(number)}`);
+        const data = await res.json();
+
+        if(data.sessionId){
+            output.innerHTML = `<p>Session ID:</p>
+            <input type="text" id="session" readonly value="${data.sessionId}" style="width:90%;"><br>
+            <span id="copy">Click here to copy</span>`;
+            document.getElementById('copy').addEventListener('click', () => {
+                const sessionInput = document.getElementById('session');
+                navigator.clipboard.writeText(sessionInput.value);
+                alert('Session ID copied!');
+            });
+        } else {
+            output.innerText = data.error || 'Error getting session';
+        }
+    } catch(err){
+        output.innerText = 'Error: ' + err.message;
     }
-  } catch(e) {
-    document.getElementById('output').innerText = 'Error: ' + e.message;
-  }
 });
 </script>
-
 </body>
 </html>
