@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: peter-md-session
+    env: node
+    plan: free
+    region: oregon   # unaweza badilisha (oregon, frankfurt, singapore)
+    buildCommand: "npm install"
+    startCommand: "npm start"
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
