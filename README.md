@@ -7,7 +7,6 @@ This project helps you generate a **QR Code** or **Pairing Code** to get your Wh
 
 
 
----
 
 ## 🚀 Features
 - Generate **WhatsApp QR Code** for login.
@@ -46,7 +45,7 @@ This project helps you generate a **QR Code** or **Pairing Code** to get your Wh
    http://localhost:5000
    ```
 
----
+
 
 ## 🌐 Deployment on Render
 
@@ -64,7 +63,7 @@ This project helps you generate a **QR Code** or **Pairing Code** to get your Wh
        plan: free
        buildCommand: "npm install"
        startCommand: "npm start"
-   ```
+  
 
 4. Deploy 🚀
 
@@ -88,5 +87,3 @@ This project helps you generate a **QR Code** or **Pairing Code** to get your Wh
 If you like this project, please **give it a star ⭐** on GitHub!
 
 ```
-
----
