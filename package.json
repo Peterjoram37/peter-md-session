@@ -1,19 +1,18 @@
 {
   "name": "peter-md-session",
   "version": "1.0.0",
-  "description": "Peter MD Session Bot (WhatsApp Session Generator)",
+  "description": "peter MD WhatsApp session generator",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
-  "engines": {
-    "node": ">=18.x"
-  },
   "dependencies": {
-    "@whiskeysockets/baileys": "^6.7.7",
-    "body-parser": "^1.20.2",
-    "express": "^4.19.2",
-    "pino": "^9.0.0",
-    "qrcode": "^1.5.3"
-  }
+    "@whiskeysockets/baileys": "^5.0.7",
+    "axios": "^1.6.0",
+    "express": "^4.18.2",
+    "pino": "^8.15.0"
+  },
+  "keywords": ["WhatsApp", "Baileys", "MD", "Session"],
+  "author": "Peter Joram",
+  "license": "MIT"
 }
