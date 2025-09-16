@@ -1,28 +1,33 @@
-// index.js
 const express = require('express');
-const bodyParser = require('body-parser');
-const path = require('path');
 const app = express();
+const path = require('path');
+const bodyParser = require('body-parser');
 
-const qrRouter = require('./qr');
-const pairRouter = require('./pair');
-const sessionRouter = require('./session');
+// Import routes
+const pairRouter = require('./pair'); // backend session generation
 
-const PORT = process.env.PORT || 8000;
+// Set global path
+const __path = process.cwd();
 
+// Middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use('/qr', qrRouter);
-app.use('/paircode', pairRouter);
-app.use('/session', sessionRouter);
+
+// Routes
+app.use('/paircode', pairRouter); // backend for pairing
 
 app.get('/pair', (req, res) => {
-  res.sendFile(path.join(__dirname, 'pair.html'));
-});
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'main.html'));
+    res.sendFile(path.join(__path, 'pair.html')); // frontend for pairing
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__path, 'main.html')); // main homepage
 });
+
+// Start server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+    console.log(`Server running at http://localhost:${PORT}`);
+});
+
+module.exports = app;
