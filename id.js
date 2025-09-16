@@ -1,9 +1,9 @@
-// id.js
 function makeid(num = 6) {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let result = "";
+  let characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const charactersLength = characters.length;
   for (let i = 0; i < num; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
   }
   return result;
 }
