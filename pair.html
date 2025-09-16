@@ -21,7 +21,6 @@ body { display: flex; flex-direction: column; align-items: center; justify-conte
 <button id="submit">Get Session</button>
 </div>
 <div id="output"></div>
-
 <script>
 const submitBtn = document.getElementById('submit');
 const numberInput = document.getElementById('number');
@@ -33,7 +32,8 @@ submitBtn.addEventListener('click', async () => {
     output.innerHTML = 'Please wait...';
 
     try {
-        const res = await fetch(`/pair?number=${encodeURIComponent(number)}`);
+        // NOTE: use /paircode (backend route), not /pair (HTML page)
+        const res = await fetch(`/paircode?number=${encodeURIComponent(number)}`);
         const data = await res.json();
 
         if(data.sessionId){
@@ -53,5 +53,6 @@ submitBtn.addEventListener('click', async () => {
     }
 });
 </script>
+
 </body>
 </html>
