@@ -1,71 +1,75 @@
-// pair.js
 const express = require('express');
 const fs = require('fs');
-const path = require('path');
 const { makeid } = require('./id');
 const pino = require('pino');
-const { default: Venocyber_Tech, useMultiFileAuthState, delay } = require('@whiskeysockets/baileys');
+const { default: Venocyber_Tech, useMultiFileAuthState, delay, makeCacheableSignalKeyStore } = require('@whiskeysockets/baileys');
 
 const router = express.Router();
-const TEMP_DIR = path.join(__dirname, 'temp');
 
-router.get('/:name?/:number?', async (req, res) => {
-  const name = req.params.name || makeid(6);
-  const numRaw = req.params.number || req.query.number;
-  if (!numRaw) {
-    return res.status(400).json({ error: 'Number is required' });
-  }
-  const num = numRaw.replace(/[^0-9]/g, '');
+// Remove temp session folder
+function removeFile(FilePath) {
+    if (!fs.existsSync(FilePath)) return false;
+    fs.rmSync(FilePath, { recursive: true, force: true });
+}
 
-  const sessionPath = path.join(TEMP_DIR, name);
-  if (!fs.existsSync(TEMP_DIR)) fs.mkdirSync(TEMP_DIR);
-  if (!fs.existsSync(sessionPath)) fs.mkdirSync(sessionPath);
+router.get('/', async (req, res) => {
+    const id = makeid(6); // unique session folder
+    let number = req.query.number;
+    if (!number) return res.json({ error: "Number is required" });
 
-  const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
-  const sock = Venocyber_Tech({
-    auth: state,
-    printQRInTerminal: false,
-    logger: pino({ level: 'silent' }),
-    browser: ["Chrome (Linux)", "", ""],
-  });
+    async function generateSession() {
+        const { state, saveCreds } = await useMultiFileAuthState('./temp/' + id);
+        try {
+            const sock = Venocyber_Tech({
+                auth: {
+                    creds: state.creds,
+                    keys: makeCacheableSignalKeyStore(state.keys, pino({ level: 'fatal' }).child({ level: 'fatal' }))
+                },
+                printQRInTerminal: false,
+                logger: pino({ level: 'fatal' }),
+                browser: ["Chrome (Node)", "", ""]
+            });
 
-  sock.ev.on('creds.update', saveCreds);
+            // Listen to connection update
+            sock.ev.on('connection.update', async (update) => {
+                const { connection, lastDisconnect } = update;
 
-  try {
-    if (!state.creds.registered) {
-      await delay(1500);
-      const code = await sock.requestPairingCode(num);
-      res.json({ code });
+                // Once connection open, read creds.json and convert to base64
+                if (connection === "open") {
+                    await delay(2000);
+                    const credsPath = `./temp/${id}/creds.json`;
+                    const data = fs.readFileSync(credsPath);
+                    const sessionId = Buffer.from(data).toString('base64');
+
+                    if (!res.headersSent) {
+                        res.json({ sessionId }); // send base64 session ID to frontend
+                    }
+
+                    await sock.ws.close();
+                    await removeFile(`./temp/${id}`);
+                }
+
+                // Auto retry if connection fails (except auth error)
+                if (connection === "close" && lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode != 401) {
+                    await delay(5000);
+                    generateSession();
+                }
+            });
+
+            sock.ev.on('creds.update', saveCreds);
+
+            // Request pairing code to WhatsApp number
+            number = number.replace(/[^0-9]/g, '');
+            await sock.requestPairingCode(number);
+
+        } catch (err) {
+            console.log("Error generating session:", err);
+            await removeFile(`./temp/${id}`);
+            if (!res.headersSent) res.json({ error: "Service Unavailable" });
+        }
     }
 
-    sock.ev.on('connection.update', async (update) => {
-      const { connection, lastDisconnect } = update;
-      if (connection === 'open') {
-        await delay(5000);
-        const credsFile = path.join(sessionPath, 'creds.json');
-        const data = fs.readFileSync(credsFile);
-        const b64 = Buffer.from(data).toString('base64');
-        const sessionIdPath = path.join(TEMP_DIR, `${name}.session`);
-        fs.writeFileSync(sessionIdPath, b64, 'utf8');
-        // you might send message inside if needed
-        // close socket
-        await delay(2000);
-        sock.ws.close();
-        // remove folder of that session if you want
-      }
-      if (connection === 'close' && lastDisconnect?.error?.output?.statusCode !== 401) {
-        console.log('Pair reconnecting ...');
-        setTimeout(async () => {
-          // optionally retry
-        }, 10000);
-      }
-    });
-  } catch (err) {
-    console.error("Pair error:", err);
-    if (!res.headersSent) {
-      res.json({ error: "Service Unavailable" });
-    }
-  }
+    return generateSession();
 });
 
 module.exports = router;
