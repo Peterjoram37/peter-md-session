@@ -1,69 +1,63 @@
 const express = require('express');
-const fs = require('fs');
+const fs = require('fs-extra');
 const { makeid } = require('./id');
 const pino = require('pino');
-const { default: Venocyber_Tech, useMultiFileAuthState, delay, makeCacheableSignalKeyStore } = require('@whiskeysockets/baileys');
+const { default: makeWASocket, useMultiFileAuthState, delay, makeCacheableSignalKeyStore } = require('@sampandey001/baileys');
 
 const router = express.Router();
 
-// Remove temp session folder
-function removeFile(FilePath) {
-    if (!fs.existsSync(FilePath)) return false;
-    fs.rmSync(FilePath, { recursive: true, force: true });
+function removeFolder(folderPath) {
+  if (fs.existsSync(folderPath)) fs.rmSync(folderPath, { recursive: true, force: true });
 }
 
 router.get('/', async (req, res) => {
-    const id = makeid(6);
-    let number = req.query.number;
-    if (!number) return res.json({ error: "Number is required" });
+  const number = req.query.number;
+  if (!number) return res.json({ error: "Number is required" });
 
-    async function generateSession() {
-        const { state, saveCreds } = await useMultiFileAuthState('./temp/' + id);
-        try {
-            const sock = Venocyber_Tech({
-                auth: {
-                    creds: state.creds,
-                    keys: makeCacheableSignalKeyStore(state.keys, pino({ level: 'fatal' }).child({ level: 'fatal' }))
-                },
-                printQRInTerminal: false,
-                logger: pino({ level: 'fatal' }),
-                browser: ["Chrome (Node)", "", ""]
-            });
+  const id = makeid();
+  const sessionFolder = `./temp/${id}`;
+  await fs.ensureDir(sessionFolder);
 
-            sock.ev.on('connection.update', async (update) => {
-                const { connection, lastDisconnect } = update;
+  try {
+    const { state, saveCreds } = await useMultiFileAuthState(sessionFolder);
+    const sock = makeWASocket({
+      auth: {
+        creds: state.creds,
+        keys: makeCacheableSignalKeyStore(state.keys, pino({ level: 'fatal' }).child({ level: 'fatal' }))
+      },
+      printQRInTerminal: false,
+      logger: pino({ level: 'fatal' }),
+      browser: ["Chrome (Node)", "", ""]
+    });
 
-                if (connection === "open") {
-                    await delay(2000);
-                    const credsPath = `./temp/${id}/creds.json`;
-                    const data = fs.readFileSync(credsPath);
-                    const sessionId = Buffer.from(data).toString('base64');
+    sock.ev.on('connection.update', async update => {
+      const { connection, lastDisconnect } = update;
 
-                    if (!res.headersSent) res.json({ sessionId });
+      if (connection === "open") {
+        await delay(2000);
+        const creds = fs.readFileSync(`${sessionFolder}/creds.json`);
+        const sessionId = Buffer.from(creds).toString('base64');
 
-                    await sock.ws.close();
-                    await removeFile(`./temp/${id}`);
-                }
+        if (!res.headersSent) res.json({ sessionId });
 
-                if (connection === "close" && lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode != 401) {
-                    await delay(5000);
-                    generateSession();
-                }
-            });
+        await sock.ws.close();
+        removeFolder(sessionFolder);
+      }
 
-            sock.ev.on('creds.update', saveCreds);
+      if (connection === "close" && lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode != 401) {
+        await delay(5000);
+        router.handle(req, res);
+      }
+    });
 
-            number = number.replace(/[^0-9]/g, '');
-            await sock.requestPairingCode(number);
+    sock.ev.on('creds.update', saveCreds);
+    await sock.requestPairingCode(number.replace(/[^0-9]/g, ''));
 
-        } catch (err) {
-            console.log("Error generating session:", err);
-            await removeFile(`./temp/${id}`);
-            if (!res.headersSent) res.json({ error: "Service Unavailable" });
-        }
-    }
-
-    return generateSession();
+  } catch (err) {
+    console.log(err);
+    removeFolder(sessionFolder);
+    if (!res.headersSent) res.json({ error: "Service Unavailable" });
+  }
 });
 
 module.exports = router;
